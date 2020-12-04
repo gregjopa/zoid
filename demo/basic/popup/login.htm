@@ -26,6 +26,12 @@
 
     <script>
 
+        //
+        window.xprops.renderOverlay({
+            isOpen: true,
+            close: window.xprops.close
+        });
+
         // Hide the loading spinner by default
 
         document.querySelector('#spinner').style.display = 'none';
@@ -59,8 +65,16 @@
 
                 // Since we had a successful login, call-back the parent page to let them know which user logged in:
 
-                window.xprops.onLogin(email);
+                window.xprops.onLogin(email)
+                    .then(() => {
+                        window.xprops.renderOverlay({
+                            isOpen: false,
+                            close: window.xprops.close
+                        });
+                    })
+
                 window.xprops.close();
+
 
             }, 2000);
         });

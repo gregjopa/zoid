@@ -1,3 +1,10 @@
+let overlayElement;
+
+function closeOverlay() {
+    if (overlayElement) {
+        overlayElement.parentNode.removeChild(overlayElement);
+    }
+}
 
 window.MyLoginZoidComponent = zoid.create({
 
@@ -7,20 +14,22 @@ window.MyLoginZoidComponent = zoid.create({
 
     // The url that will be loaded in the iframe or popup, when someone includes my component on their page
 
-    url: './login.htm',
-    
+    url: 'http://localhost:1337/demo/basic/popup/login.htm',
+
     dimensions: {
         width:  '300px',
         height: '150px'
     },
 
-    // The background overlay
-
+    // idea - container template is responsible for intializing and first showing the loadingOverlay
+    //      - however, it does not own the DOM for it. So closing the popup does not close the overlay
     containerTemplate: ({ uid, tag, context, focus, close, doc }) => {
 
         function closeComponent(event) {
             event.preventDefault();
             event.stopPropagation();
+            closeOverlay();
+
             return close();
         }
 
@@ -30,7 +39,7 @@ window.MyLoginZoidComponent = zoid.create({
             return focus();
         }
 
-        return pragmatic.node('div', { id: uid, 'onClick': focusComponent, 'class': `${ tag } ${ tag }-context-${ context } ${ tag }-focus` },
+        overlayElement = pragmatic.node('div', { id: uid, 'onClick': focusComponent, 'class': `${ tag } ${ tag }-context-${ context } ${ tag }-focus` },
 
             pragmatic.node('a', { 'href': '#', 'onClick': closeComponent, 'class': `${ tag }-close` }),
 
@@ -80,5 +89,22 @@ window.MyLoginZoidComponent = zoid.create({
                 }
             `)
         ).render(pragmatic.dom({ doc }));
+
+        document.body.appendChild(overlayElement);
+    },
+
+    props: {
+        onLogin: {
+            type: 'function',
+
+            decorate(original) {
+                return function() {
+                    return original.value.apply(this, arguments)
+                        .finally(() => {
+                            closeOverlay();
+                        })
+                };
+            }
+        }
     }
 });
